@@ -1,38 +1,27 @@
 import React, { useState } from "react";
-import styled from "styled-components";
-import QuestionCard from "./Components/QuestionCard";
+import QuestionCard from "./components/QuestionCard";
 import Logo from "./images/Expertizo-logo.png";
 import QuizData from "./questions.json";
+import { Button } from "./styles/QuestionCard";
+import { AppWrapper } from "./styles/HomeStyle";
+import ProgressBar from "./components/ProgressBar";
 
 const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 
 function App() {
   const [quizData, setQuizData] = useState();
   const [gameOver, setGameOver] = useState(true);
-  const [userAnswer, setUserAnswer] = useState([]);
-  const [number, setNumber] = useState(0);
+  const [showNextQ, setNextQ] = useState(false);
+  const [userAnswer, setUserAnswer] = useState(0);
+  const [currentQues, setCurrentQues] = useState(0);
+  const [userProgress, setUserProgress] = useState(0);
+  const [maxScore, setMaxScore] = useState(100);
+  const [minScore, setMinScore] = useState(0);
   const [score, setScore] = useState(0);
-  const [check, setcheck] = useState(true);
+  const [noScore, setNoScore] = useState(0);
+  const [check, setCheck] = useState(true);
 
-  const TotalQuestions = QuizData.length;
-
-  const AppWrapper = styled.section`
-    .wrap {
-      max-width: 600px;
-      min-width: 200px;
-      max-height: 600px;
-      margin: 0 auto;
-      // text-align: center;
-      padding: 100px;
-      border: solid 1px gray;
-      margin-top: 40px;
-      box-shadow: 10px 5px 10px gray;
-      padding: 20px;
-    }
-    .image-logo {
-      width: 100%;
-    }
-  `;
+  const totalQuestions = QuizData.length;
 
   const shuffleAnswer = () => {
     return QuizData.map((question) => ({
@@ -45,155 +34,111 @@ function App() {
     const newData = shuffleAnswer();
     setGameOver(false);
     setQuizData(newData);
-    setUserAnswer([]);
-    setNumber(0);
+    setUserAnswer(0);
+    setCurrentQues(0);
   };
 
   const nextQuestion = () => {
-    const nextQ = number + 1;
+    setNextQ(false);
+    const nextQ = currentQues + 1;
 
-    if (nextQ === TotalQuestions) {
+    if (nextQ === totalQuestions) {
       setGameOver(true);
     } else {
-      setNumber(nextQ);
+      setCurrentQues(nextQ);
     }
   };
 
   const checkAnswer = (e) => {
+    setNextQ(true);
+    setUserAnswer((num) => num + 1);
     if (!gameOver) {
       const answer = e.target.innerHTML;
-      const correct = quizData[number].correct_answer === answer;
+      const correct =
+        decodeURIComponent(quizData[currentQues].correct_answer) === answer;
       if (correct) {
-        setScore((prev) => prev + 1);
-        setcheck(true);
+        setScore((score) => score + 1);
+        setCheck(true);
+        setMinScore((noScore / totalQuestions) * 100);
+        setMaxScore(
+          ((score + 1 + (totalQuestions - (currentQues + 1))) /
+            totalQuestions) *
+            100
+        );
+        setUserProgress(Math.round(((score + 1) / (currentQues + 1)) * 100));
       } else {
-        setcheck(false);
+        setCheck(false);
+        setNoScore(noScore + 1);
+        setMinScore(((noScore) / totalQuestions) * 100);
+        setMaxScore(
+          ((score - 1 + (totalQuestions - currentQues)) / totalQuestions) * 100
+        );
+        setUserProgress(Math.round((score / (currentQues + 1)) * 100));
       }
-
-      const answerObject = {
-        question: quizData[number].question,
-        answer,
-        correct,
-        correctAnswer: quizData[number].correct_answer,
-      };
-      setUserAnswer((p) => [...p, answerObject]);
     }
   };
 
-  const progress = () => {
-    let percent = ((number + 1) * 100) / TotalQuestions;
+  const progressBar = () => {
+    let percent = ((currentQues + 1) * 100) / totalQuestions;
     return percent;
   };
-  const userProgress = () => {
-    let percent = (score / (number + 1)) * 100;
-    console.log("current score", score, number + 1);
-    console.log("current score", percent);
-    return Math.round(percent);
+
+  const finalQuiz = () => {
+    let result = userProgress >= 60 ? "You Win" : "You Lost";
+    alert(result);
+    window.location.reload();
   };
-  const userallCorrect = () => {
-    // let percent = TotalQuestions - number + score;
-    // console.log("==", percent, number);
-    // percent = (percent / TotalQuestions) * 100;
-    let percent = TotalQuestions - (number + 1);
-    percent = percent + score;
-    percent = (percent / TotalQuestions) * 100;
-    return percent;
-  };
-  const userallIncorect = () => {
-    let percent = ((TotalQuestions - score) / TotalQuestions) * 100;
-    return percent;
+
+  const StartQuiz = () => {
+    return (
+      <div className="text-center">
+        <img width="100%" className="image-logo" src={Logo} alt="logo" />
+        <button
+          type="button"
+          className="btn btn-outline-secondary"
+          onClick={getStarted}
+        >
+          Start Quiz
+        </button>
+      </div>
+    );
   };
 
   return (
     <AppWrapper>
-      <div className="wrap">
-        {!gameOver && (
-          <div className="progress">
-            <div
-              className="progress-bar"
-              role="progressbar"
-              style={{ width: `${progress()}%` }}
-              aria-valuenow={100}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            />
-          </div>
-        )}
-        {gameOver && (
-          <div className="text-center">
-            <img className="image-logo" src={Logo} alt="logo" />
-            <button
-              type="button"
-              className="btn btn-outline-secondary"
-              onClick={getStarted}
-            >
-              Start Quiz
-            </button>
-          </div>
-        )}
-        {!gameOver && (
-          <>
-            <QuestionCard
-              questionNr={number + 1}
-              totalQues={TotalQuestions}
-              question={quizData[number].question}
-              answers={quizData[number].answer}
-              callback={checkAnswer}
-              userAns={userAnswer ? userAnswer[number] : undefined}
-              category={quizData[number].category}
-            />
-          </>
-        )}
-        {!gameOver &&
-        userAnswer.length === number + 1 &&
-        number !== TotalQuestions - 1 ? (
-          <div className="text-center">
-            <h3>{check ? " Correct" : "Sorry!"}</h3>
-            <button
-              className="answerButton btn col-md-5"
-              onClick={nextQuestion}
-            >
-              Next Question
-            </button>
-          </div>
-        ) : null}
-        {!gameOver && (
-          <>
-            <div>
-              <p>Incorrect:{userallIncorect()}%</p>
-              <p>Score:{userProgress()}%</p>
-              <p>Max Score:{userallCorrect()}%</p>
-              {/* <p>Max:{}%</p> */}
-            </div>
-            <div className="progress mt-3">
-              <div
-                className="progress-bar bg-dark"
-                role="progressbar"
-                style={{ width: `${userallIncorect()}%` }}
-                aria-valuenow={15}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              />
-              <div
-                className="progress-bar bg-secondary "
-                role="progressbar"
-                style={{ width: `${userProgress()}%` }}
-                aria-valuenow={30}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              />
-              <div
-                className="progress-bar bg-info"
-                role="progressbar"
-                style={{ width: `${userallCorrect()}%` }}
-                aria-valuenow={20}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              />
-            </div>
-          </>
-        )}
-      </div>
+      {gameOver && StartQuiz()}
+      {!gameOver && (
+        <QuestionCard
+          questionNr={currentQues + 1}
+          totalQues={totalQuestions}
+          question={quizData[currentQues].question}
+          answers={quizData[currentQues].answer}
+          checkAnswer={checkAnswer}
+          userAns={userAnswer ? userAnswer[currentQues] : undefined}
+          category={quizData[currentQues].category}
+          difficulty={quizData[currentQues].difficulty}
+          progressBar={progressBar}
+        />
+      )}
+      {showNextQ && (
+        <div className="text-center">
+          <h3>{check ? " Correct" : "Sorry!"}</h3>
+          <Button
+            className="answerButton btn"
+            onClick={totalQuestions === userAnswer ? finalQuiz : nextQuestion}
+          >
+            {totalQuestions === userAnswer ? "Show Result" : " Next Question"}
+          </Button>
+        </div>
+      )}
+
+      {!gameOver && (
+        <ProgressBar
+          minimumScore={minScore}
+          maximumScore={maxScore}
+          userProgress={userProgress}
+        />
+      )}
     </AppWrapper>
   );
 }
