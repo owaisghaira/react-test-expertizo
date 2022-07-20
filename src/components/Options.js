@@ -10,7 +10,7 @@ const Options = ({ answers, checkAnswer, userAns }) => {
             className="answerButton btn"
             disabled={userAns ? true : false}
             onClick={checkAnswer}
-          >
+          > 
             {decodeURIComponent(ans)}
           </Button>
         </div>
