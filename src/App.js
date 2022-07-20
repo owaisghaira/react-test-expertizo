@@ -21,7 +21,7 @@ function App() {
   const [noScore, setNoScore] = useState(0);
   const [check, setCheck] = useState(true);
 
-  const totalQuestions = QuizData.length;
+  const totalQuestions =   QuizData.length;
 
   const shuffleAnswer = () => {
     return QuizData.map((question) => ({
