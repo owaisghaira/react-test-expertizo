@@ -4,16 +4,14 @@ import Options from "./Options";
 import TopBar from "./TopBar";
 
 const QuestionCard = ({
-  question,
-  answers,
+  quizData,
   checkAnswer,
   userAns,
   questionNr,
   totalQues,
-  category,
   progressBar,
-  difficulty,
 }) => {
+  const { question, answer, category, difficulty } = quizData;
   return (
     <>
       <TopBar progressBar={progressBar} />
@@ -30,7 +28,11 @@ const QuestionCard = ({
         <p className="">Q : {decodeURIComponent(question)}</p>
 
         <div className="row mt-3">
-          <Options answers={answers} userAns={userAns} checkAnswer={checkAnswer} />
+          <Options
+            answers={answer}
+            userAns={userAns}
+            checkAnswer={checkAnswer}
+          />
         </div>
       </div>
     </>

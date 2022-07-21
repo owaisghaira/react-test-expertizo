@@ -11,17 +11,16 @@ const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
 function App() {
   const [quizData, setQuizData] = useState();
   const [gameOver, setGameOver] = useState(true);
-  const [showNextQ, setNextQ] = useState(false);
+  const [showNextQ, setShowNextQ] = useState(false);
   const [userAnswer, setUserAnswer] = useState(0);
   const [currentQues, setCurrentQues] = useState(0);
   const [userProgress, setUserProgress] = useState(0);
   const [maxScore, setMaxScore] = useState(100);
   const [minScore, setMinScore] = useState(0);
   const [score, setScore] = useState(0);
-  const [noScore, setNoScore] = useState(0);
   const [check, setCheck] = useState(true);
 
-  const totalQuestions =   QuizData.length;
+  const totalQuestions = QuizData.length;
 
   const shuffleAnswer = () => {
     return QuizData.map((question) => ({
@@ -36,10 +35,15 @@ function App() {
     setQuizData(newData);
     setUserAnswer(0);
     setCurrentQues(0);
+    setUserProgress(0);
+    setMinScore(0);
+    setMaxScore(100);
+    setScore(0);
+    setShowNextQ(false);
   };
 
   const nextQuestion = () => {
-    setNextQ(false);
+    setShowNextQ(false);
     const nextQ = currentQues + 1;
 
     if (nextQ === totalQuestions) {
@@ -50,7 +54,7 @@ function App() {
   };
 
   const checkAnswer = (e) => {
-    setNextQ(true);
+    setShowNextQ(true);
     setUserAnswer((num) => num + 1);
     if (!gameOver) {
       const answer = e.target.innerHTML;
@@ -59,7 +63,7 @@ function App() {
       if (correct) {
         setScore((score) => score + 1);
         setCheck(true);
-        setMinScore((noScore / totalQuestions) * 100);
+        setMinScore(((score + 1) / totalQuestions) * 100);
         setMaxScore(
           ((score + 1 + (totalQuestions - (currentQues + 1))) /
             totalQuestions) *
@@ -68,8 +72,7 @@ function App() {
         setUserProgress(Math.round(((score + 1) / (currentQues + 1)) * 100));
       } else {
         setCheck(false);
-        setNoScore(noScore + 1);
-        setMinScore(((noScore) / totalQuestions) * 100);
+        setMinScore((score / totalQuestions) * 100);
         setMaxScore(
           ((score - 1 + (totalQuestions - currentQues)) / totalQuestions) * 100
         );
@@ -86,10 +89,11 @@ function App() {
   const finalQuiz = () => {
     let result = userProgress >= 60 ? "You Win" : "You Lost";
     alert(result);
-    window.location.reload();
+    getStarted();
+    setGameOver(true);
   };
 
-  const StartQuiz = () => {
+  const startQuiz = () => {
     return (
       <div className="text-center">
         <img width="100%" className="image-logo" src={Logo} alt="logo" />
@@ -106,17 +110,14 @@ function App() {
 
   return (
     <AppWrapper>
-      {gameOver && StartQuiz()}
+      {gameOver && startQuiz()}
       {!gameOver && (
         <QuestionCard
           questionNr={currentQues + 1}
           totalQues={totalQuestions}
-          question={quizData[currentQues].question}
-          answers={quizData[currentQues].answer}
+          quizData={quizData[currentQues]}
           checkAnswer={checkAnswer}
-          userAns={userAnswer ? userAnswer[currentQues] : undefined}
-          category={quizData[currentQues].category}
-          difficulty={quizData[currentQues].difficulty}
+          userAns={showNextQ}
           progressBar={progressBar}
         />
       )}
@@ -135,8 +136,8 @@ function App() {
       {!gameOver && (
         <ProgressBar
           minimumScore={minScore}
-          maximumScore={maxScore}
-          userProgress={userProgress}
+          maximumScore={maxScore.toFixed()}
+          userProgress={userProgress.toFixed()}
         />
       )}
     </AppWrapper>

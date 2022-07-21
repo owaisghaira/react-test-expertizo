@@ -8,7 +8,7 @@ const Options = ({ answers, checkAnswer, userAns }) => {
         <div key={i} className=" col-md-6">
           <Button
             className="answerButton btn"
-            disabled={userAns ? true : false}
+            disabled={userAns}
             onClick={checkAnswer}
           >
             {decodeURIComponent(ans)}
